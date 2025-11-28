@@ -15,7 +15,7 @@ const menuData = [
       { name: "Pistachio Kunafa Bait", price: null },
       { name: "Nutella Kunafa Bait", price: null },
       { name: "Caramel Kunafa Bait", price: null },
-      { name: "Coffee Kunafa Bait", price: null }, // Caffe → Coffee
+      { name: "Coffee Kunafa Bait", price: null }, // 
       { name: "Biscoff Kunafa Bait", price: null }
     ]
   },
@@ -154,9 +154,9 @@ const menuData = [
       { name: "Broken Jelly Pudding", price: 300 },
       { name: "Coffee Pudding", price: 300 },
       { name: "Panna Cotta Pudding", price: 250 },
-      { name: "Lemon Curd Tart Pudding", price: null },
-      { name: "Chocolate Pudding", price: null },
-      { name: "Coconut Milk Mango Pudding", price: null }
+      { name: "Lemon Curd Tart Pudding", price: 250 },
+      { name: "Chocolate Pudding", price: 250 },
+      { name: "Coconut Milk Mango Pudding", price: 500 }
     ]
   },
 
@@ -280,8 +280,15 @@ document.querySelector("#whatsappBtn").addEventListener("click", function () {
   window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
 });
 
+document.querySelector("#chat-bot").addEventListener("click", function () {
+  window.open("chatbot.html", "_blank");
+});
 
-// ——— replace initAnnScroll() with this ———
+
+
+
+
+
 function initAnnScroll() {
   // make sure GSAP plugin is registered once
   if (!gsap || !ScrollTrigger) return;
@@ -292,14 +299,13 @@ function initAnnScroll() {
 
   // create the scroll animation for the announcement
   gsap.to("#ann h2", {
-    xPercent: -400,
+    xPercent: -350,
     ease: "none",
     scrollTrigger: {
       trigger: "#ann",
-      markers: false,        // set to true while debugging
       start: "top 60%",
-      end: "top 5%",
-      scrub: 1.2,
+      end: "bottom 70%",
+      scrub: 3.2,
       pin: true,
       pinSpacing: true,
       pinReparent: true,
