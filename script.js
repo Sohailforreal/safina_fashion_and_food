@@ -281,8 +281,39 @@ document.querySelector("#whatsappBtn").addEventListener("click", function () {
 });
 
 
+// ——— replace initAnnScroll() with this ———
+function initAnnScroll() {
+  // make sure GSAP plugin is registered once
+  if (!gsap || !ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
 
+  // kill all previous ScrollTriggers to avoid duplicates
+  ScrollTrigger.getAll().forEach(st => st.kill());
 
+  // create the scroll animation for the announcement
+  gsap.to("#ann h2", {
+    xPercent: -400,
+    ease: "none",
+    scrollTrigger: {
+      trigger: "#ann",
+      markers: false,        // set to true while debugging
+      start: "top 60%",
+      end: "top 5%",
+      scrub: 1.2,
+      pin: true,
+      pinSpacing: true,
+      pinReparent: true,
+      anticipatePin: 0.5,
+      invalidateOnRefresh: true
+    }
+  });
+
+  // refresh measurements
+  ScrollTrigger.refresh();
+}
+
+// call once at startup
+initAnnScroll();
 
 
 
@@ -299,7 +330,6 @@ if(arr == '')  {
   search_result.appendChild(noRes)
   
 }
-  
  else{
    arr.forEach(function(dets){
     
@@ -365,7 +395,22 @@ else {
   
 
   })
- } 
+ }
+ 
+
+  setTimeout(() => {
+    // debug: see if multiple #ann exist
+    const annCount = document.querySelectorAll('#ann').length;
+    if (annCount > 1) {
+      console.warn('Multiple #ann elements found:', annCount);
+    }
+
+    // refresh measurements then re-init the scroll trigger
+    ScrollTrigger.refresh();
+    initAnnScroll();
+  }, 50);
+ 
+ 
   
 }
 
