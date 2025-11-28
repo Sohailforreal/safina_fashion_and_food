@@ -252,10 +252,10 @@ const menuData = [
   {
     name: "Milke Chocolate Bars",
     items: [
-      { name: "Milke Chocolate Mini Bar", price: 20 },
-      { name: "Milke Chocolate Medium Bar", price: 50 },
-      { name: "Milke Chocolate Bar", price: 100 },
-      { name: "Milke Chocolate Big Bar", price: 200 }
+      { name: "Mini Bar", price: 20 },
+      { name: "Medium Bar", price: 50 },
+      { name: "Big Bar", price: 100 },
+      { name: "Biger Bar", price: 200 }
     ]
   },
 
@@ -269,6 +269,17 @@ const menuData = [
     ]
   }
 ];
+
+
+document.querySelector("#call").addEventListener("click", function () {
+  window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
+});
+
+
+document.querySelector("#whatsappBtn").addEventListener("click", function () {
+  window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
+});
+
 
 
 
