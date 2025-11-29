@@ -303,8 +303,9 @@ function initAnnScroll() {
     ease: "none",
     scrollTrigger: {
       trigger: "#ann",
+      markers:false,
       start: "top 60%",
-      end: "bottom 70%",
+      end: "bottom 50%",
       scrub: 3.2,
       pin: true,
       pinSpacing: true,
