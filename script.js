@@ -271,185 +271,212 @@ const menuData = [
 ];
 
 
-document.querySelector("#call").addEventListener("click", function () {
-  window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
-});
 
+function debounce(fn, wait) {
+  var timer = null;
+  return function () {
+    var args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      fn.apply(null, args);
+    }, wait);
+  };
+}
 
-document.querySelector("#whatsappBtn").addEventListener("click", function () {
-  window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
-});
+/* ====== Price formatting helper ====== */
+function formatPrice(item) {
+  if (item.price != null) {
+    return '₹ ' + item.price;
+  } else if (Array.isArray(item.prices)) {
+    return '₹ ' + item.prices[0] + ' | ₹ ' + item.prices[1];
+  } else {
+    return '—';
+  }
+}
 
-document.querySelector("#chat-bot").addEventListener("click", function () {
-  window.open("chatbot.html", "_blank");
-});
+/* ========== DOM: Small factory functions ========== */
+function createCategoryElement(name) {
+  var h4 = document.createElement('h4');
+  h4.textContent = name;
+  h4.classList.add('category', 'great-vibes-regular');
+  return h4;
+}
 
+function createItemCard(item) {
+  var card = document.createElement('div');
+  card.classList.add('card');
 
+  var details = document.createElement('div');
+  details.classList.add('details');
 
+  var pName = document.createElement('p');
+  pName.textContent = item.name;
+  pName.classList.add('item-name', 'montserrat-p');
 
+  var pPrice = document.createElement('p');
+  pPrice.textContent = formatPrice(item);
+  pPrice.classList.add('item-price', 'montserrat-p');
 
+  details.appendChild(pName);
+  details.appendChild(pPrice);
+
+  // append note if present (optional and subtle)
+  if (item.note) {
+    var note = document.createElement('small');
+    note.textContent = item.note;
+    note.classList.add('item-note', 'montserrat-p');
+    details.appendChild(note);
+  }
+
+  card.appendChild(details);
+  return card;
+}
+
+/* ========== Render / Search logic ========== */
+function renderCards(categories) {
+  var searchResult = document.querySelector('#search-result');
+  if (!searchResult) return;
+
+  // Clear quickly
+  searchResult.innerHTML = '';
+
+  // If empty result (like '' or [])
+  if (!categories || categories.length === 0) {
+    var noRes = document.createElement('p');
+    noRes.textContent = 'No Item Found';
+    noRes.classList.add('no-result', 'montserrat-p');
+    searchResult.appendChild(noRes);
+    // refresh scroll triggers if available
+    refreshScrollTriggersSafely();
+    return;
+  }
+
+  // Build DOM with fragment to avoid multiple reflows
+  var frag = document.createDocumentFragment();
+
+  categories.forEach(function (category) {
+    // If category has zero items, skip
+    if (!category.items || category.items.length === 0) return;
+
+    frag.appendChild(createCategoryElement(category.name));
+
+    category.items.forEach(function (item) {
+      frag.appendChild(createItemCard(item));
+    });
+  });
+
+  searchResult.appendChild(frag);
+
+  // Refresh scroll triggers after DOM update
+  refreshScrollTriggersSafely();
+}
+
+/* Filter function that returns categories with matching items */
+function filterMenuByText(text) {
+  text = (text || '').trim().toLowerCase();
+
+  if (text === '') {
+    // return original menu (no filtering)
+    return menuData;
+  }
+
+  // produce new list where each category contains only matching items
+  var result = menuData.map(function (category) {
+    var filteredItems = category.items.filter(function (item) {
+      return item.name.toLowerCase().indexOf(text) !== -1;
+    });
+
+    return {
+      name: category.name,
+      items: filteredItems
+    };
+  }).filter(function (category) {
+    return category.items.length > 0;
+  });
+
+  return result;
+}
+
+/* ========== ScrollTrigger / GSAP helpers ========== */
+function refreshScrollTriggersSafely() {
+  // If gsap or ScrollTrigger not present, skip quietly
+  try {
+    if (window.ScrollTrigger && window.gsap) {
+      // refresh measurements
+      window.ScrollTrigger.refresh();
+      // ensure our animation is initialized (safe guard)
+      initAnnScroll();
+    }
+  } catch (err) {
+    // do nothing
+    // console.warn('ScrollTrigger refresh skipped', err);
+  }
+}
 
 function initAnnScroll() {
-  // make sure GSAP plugin is registered once
-  if (!gsap || !ScrollTrigger) return;
-  gsap.registerPlugin(ScrollTrigger);
+  // initialize once, double-check plugin exists
+  if (!window.gsap || !window.ScrollTrigger) return;
 
-  // kill all previous ScrollTriggers to avoid duplicates
-  ScrollTrigger.getAll().forEach(st => st.kill());
+  // register plugin once
+  try {
+    if (!gsap.utils) {
+      gsap.registerPlugin(ScrollTrigger);
+    }
+  } catch (e) {
+    // if already registered, ignore
+  }
+
+  // kill previous triggers to prevent duplicates
+  if (ScrollTrigger.getAll) {
+    ScrollTrigger.getAll().forEach(function (st) {
+      try { st.kill(); } catch (e) {}
+    });
+  }
 
   // create the scroll animation for the announcement
-  gsap.to("#ann h2", {
-    xPercent: -350,
-    ease: "none",
-    scrollTrigger: {
-      trigger: "#ann",
-      markers:false,
-      start: "top 60%",
-      end: "bottom 50%",
-      scrub: 3.2,
-      pin: true,
-      pinSpacing: true,
-      pinReparent: true,
-      anticipatePin: 0.5,
-      invalidateOnRefresh: true
-    }
-  });
+  // guard so we don't throw if element missing
+  var ann = document.querySelector('#ann h2');
+  if (!ann) return;
 
-  // refresh measurements
-  ScrollTrigger.refresh();
+  // create the animation
+  try {
+    gsap.to("#ann h2", {
+      xPercent: -350,
+      ease: "none",
+      scrollTrigger: {
+        trigger: "#ann",
+        markers: false,
+        start: "top 60%",
+        end: "bottom 50%",
+        scrub: 3.2,
+        pin: true,
+        pinSpacing: true,
+        pinReparent: true,
+        anticipatePin: 0.5,
+        invalidateOnRefresh: true
+      }
+    });
+  } catch (err) {
+    // safe fallback: do nothing if GSAP call fails
+  }
 }
 
-// call once at startup
-initAnnScroll();
-
-
-
-function renderCards(arr){
-const search_result= document.querySelector("#search-result")
-    search_result.innerHTML = "" 
-
-if(arr == '')  {
-  
-  const noRes = document.createElement("p")
-  noRes.textContent = "No Item Found"
-  noRes.classList.add("no-result")
-  noRes.classList.add("montserrat-p")
-  search_result.appendChild(noRes)
-  
-}
- else{
-   arr.forEach(function(dets){
-    
-    
-    
-const category = document.createElement('h4')
-    
-  category.textContent = dets.name
-  
-  category.classList.add("category")
-  category.classList.add("great-vibes-regular")
-   search_result.appendChild(category) 
-  
-    
-    
-    
-  dets.items.forEach(function(val){
-    const card = document.createElement("div")
-    card.classList.add("card")
-    
-    const details = document.createElement("div")
-    
-    details.classList.add("details")
-    
-
-
-
-
-  
-  
-  const p = document.createElement("p")
-  p.textContent = val.name
-  p.classList.add("item-name")   
-  p.classList.add("montserrat-p")
-  
-  const p2 = document.createElement("p")
-  p2.classList.add("montserrat-p")
-  p2.classList.add("item-price")
-  if (val.price != null) {
-  // single price
-  p2.textContent = `₹ ${val.price}`;
-} 
-else if (Array.isArray(val.prices)) {
-  // two prices
-p2.textContent = `₹ ${val.prices[0]} | ₹ ${val.prices[1]}`;
-} 
-
-else {
-  // nothing available
-  p2.textContent = "—";
-}
-  
-  
-  
-  details.append(p,p2)
-  card.append(details)
-  
-  search_result.appendChild(card)
-    
-    
-  })
-      
-  
-
-  })
- }
- 
-
-  setTimeout(() => {
-    // debug: see if multiple #ann exist
-    const annCount = document.querySelectorAll('#ann').length;
-    if (annCount > 1) {
-      console.warn('Multiple #ann elements found:', annCount);
-    }
-
-    // refresh measurements then re-init the scroll trigger
-    ScrollTrigger.refresh();
-    initAnnScroll();
-  }, 50);
- 
- 
-  
+/* ========== Buttons & small UI actions ======== */
+function openWhatsApp() {
+  window.open("https://wa.me/918286917860?text=Hi%20I%20want%20to%20know%20more!", "_blank");
 }
 
-renderCards(menuData)
+function openChatbot() {
+  window.open("chatbot.html", "_blank");
+}
 
+/* ====== Go to top button (self-contained) ====== */
+(function initGoTopButton() {
+  var SCROLL_THRESHOLD = 280;
+  var btn = document.getElementById('goTopBtn');
 
-
-//input par event listener lagao
-//user ka keystroke nikalo
-//menu data ko filter karo on the basis of key stroke
-//filter ko render karo
-document.querySelector("#search").addEventListener("input", function(e){
-
-  let searchText = e.target.value.toLowerCase();
-
-  let result = menuData.filter(function(item){
-    return item.name.toLowerCase().includes(searchText);
-  });
-
-  renderCards(result); // filtered items
-
-});
-
-
-// ===== Go to top button =====
-(function() {
-  const SCROLL_THRESHOLD = 280; // show button after px scrolled
-  const goTopBtn = document.getElementById('goTopBtn');
-
-  // If button not found (safety), create it dynamically
-  if (!goTopBtn) {
-    const btn = document.createElement('button');
+  if (!btn) {
+    btn = document.createElement('button');
     btn.id = 'goTopBtn';
     btn.setAttribute('aria-label', 'Go to top');
     btn.title = 'Go to top';
@@ -457,40 +484,72 @@ document.querySelector("#search").addEventListener("input", function(e){
     document.body.appendChild(btn);
   }
 
-  const btnEl = document.getElementById('goTopBtn');
-
   // Show / hide on scroll
-  window.addEventListener('scroll', function() {
+  window.addEventListener('scroll', function () {
     if (window.scrollY > SCROLL_THRESHOLD) {
-      btnEl.classList.add('show');
+      btn.classList.add('show');
     } else {
-      btnEl.classList.remove('show');
+      btn.classList.remove('show');
     }
   });
 
   // Click -> smooth scroll to top
-  btnEl.addEventListener('click', function() {
+  btn.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Optionally hide the button right away:
-    btnEl.classList.remove('show');
+    btn.classList.remove('show');
   });
 
-  // Keyboard accessibility: Enter / Space also trigger click
-  btnEl.addEventListener('keydown', function(e) {
+  // Keyboard accessibility
+  btn.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      btnEl.click();
+      btn.click();
     }
   });
 })();
 
+/* ========== Event wiring & startup ========== */
+function registerEventListeners() {
+  var callBtn = document.querySelector('#call');
+  if (callBtn) {
+    callBtn.addEventListener('click', openWhatsApp);
+  }
 
+  var waBtn = document.querySelector('#whatsappBtn');
+  if (waBtn) {
+    waBtn.addEventListener('click', openWhatsApp);
+  }
 
+  var chatBtn = document.querySelector('#chat-bot');
+  if (chatBtn) {
+    chatBtn.addEventListener('click', openChatbot);
+  }
 
+  // search input with debounce
+  var searchInput = document.querySelector('#search');
+  if (searchInput) {
+    var onInput = debounce(function (e) {
+      var q = e.target.value;
+      var filtered = filterMenuByText(q);
+      renderCards(filtered);
+    }, 180); // 180ms delay - small and responsive
 
+    searchInput.addEventListener('input', onInput);
+  }
+}
 
+/* ========== Initialize page ======== */
+function init() {
+  // initial render
+  renderCards(menuData);
 
+  // wire events
+  registerEventListeners();
 
+  // initialize scroll animations if GSAP present
+  initAnnScroll();
+}
 
-
+// run init on load (if script placed at end of body it's safe)
+init();
 
