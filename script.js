@@ -12,11 +12,11 @@ const menuData = [
   {
     name: "Kunafa - Bait",
     items: [
-      { name: "Pistachio Kunafa Bait", price: null },
-      { name: "Nutella Kunafa Bait", price: null },
-      { name: "Caramel Kunafa Bait", price: null },
-      { name: "Coffee Kunafa Bait", price: null }, // 
-      { name: "Biscoff Kunafa Bait", price: null }
+      { name: "Pistachio Kunafa Bait", price: 50 },
+      { name: "Nutella Kunafa Bait", price: 50 },
+      { name: "Caramel Kunafa Bait", price: 50 },
+      { name: "Coffee Kunafa Bait", price: 50 }, // 
+      { name: "Biscoff Kunafa Bait", price: 50 }
     ]
   },
   {
